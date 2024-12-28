@@ -1,6 +1,6 @@
 from django.urls import path
-from server_side import views
+from . import views
 
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', views.index, name='server'),
 ]
