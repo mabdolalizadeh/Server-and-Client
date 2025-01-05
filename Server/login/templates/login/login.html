@@ -1,12 +1,30 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'login/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <title>Login</title>
 </head>
 <body>
-<h1>Login Form</h1>
-    {% csrf_token %}
-    {{ form }}
+<div class="container">
+    <div class="box">
+        <h1>Login Form</h1>
+        {% csrf_token %}
+        {{ form }}
+    </div>
+</div>
 </body>
+
+<script>
+document.addEventListener('mousemove', (event) => {
+  const x = event.clientX / window.innerWidth * 100;
+  const y = event.clientY / window.innerHeight * 100;
+  document.body.style.backgroundImage = `radial-gradient( circle 2000px at ${x}% ${y}%, rgba(9,29,85,1) 0.2%, rgba(0,0,0,1) 100.2% )`;
+});
+</script>
 </html>

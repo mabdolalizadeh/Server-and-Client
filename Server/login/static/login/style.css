@@ -1,0 +1,44 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-family: "Anonymous Pro", serif;;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+h1 {
+    color: white;
+    font-weight: bolder;
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 600px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)); /* Subtle white gradient */
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    width: 700px;
+    max-width: 1000px;
+}
+
