@@ -1,18 +1,9 @@
 from django import forms
-from .models import User
+from django.contrib.auth.forms import AuthenticationForm
 
 
-class UserLoginForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ('username', 'password')
-        labels = {'username': '', 'password': ''}
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}),
-            'password': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}),
-        }
-
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        if password != self.cleaned_data.get('password'):
-            raise forms.ValidationError("Password must match")
+class UserLoginForm(AuthenticationForm):
+    username = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control',
+                                                                                       'placeholder': 'Username'}))
+    password = forms.CharField(label="", widget=forms.PasswordInput(attrs={'class': 'form-control',
+                                                                           'placeholder': 'Password'}))

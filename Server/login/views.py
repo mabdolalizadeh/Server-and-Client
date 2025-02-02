@@ -1,24 +1,23 @@
-from django.shortcuts import redirect
-from django.views import View
-from django.views.generic import CreateView, FormView
-from login import forms
-from login.models import User
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from .forms import UserLoginForm  # Ensure this form exists
 
 
-# Create your views here.
-class LoginView(FormView):
-    template_name = 'login/login.html'
-    form_class = forms.UserLoginForm
+def login_view(request):
+    if request.method == "POST":
+        form = UserLoginForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+            user = authenticate(request, username=username, password=password)
 
-    def form_valid(self, form):
-        user = User.objects.get(username=form.cleaned_data['username'])
-        if user and user.is_active and user.check_password(form.cleaned_data['password']):
-            return redirect('server')
+            if user is not None:
+                login(request, user)
+                return redirect("server")
+
         else:
-            form.add_error("Username or password incorrect")
+            print(form.errors)
 
-
-
-
-
-
+    else:
+        form = UserLoginForm()
+    return render(request, "login/login.html", {"form": form})

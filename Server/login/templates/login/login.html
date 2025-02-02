@@ -15,8 +15,11 @@
     <div class="box">
         <div class="form">
             <h1 id="header"></h1>
-            {% csrf_token %}
-            {{ form }}
+            <form class="form" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="submit" type="submit">Login</button>
+            </form>
         </div>
     </div>
 </div>

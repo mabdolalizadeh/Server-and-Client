@@ -3,10 +3,10 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True)
     username = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=50)
-    side = models.CharField(max_length=50,)
+    side = models.CharField(max_length=50)
+    date_joined = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'user'
@@ -14,5 +14,4 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.side}, {self.username}'
-
 
