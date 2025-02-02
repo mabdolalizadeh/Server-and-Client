@@ -22,10 +22,18 @@ body {
 }
 
 h1 {
-    color: white;
+    color: #00C03B;
     font-weight: bolder;
     font-size: 4rem;
     margin-bottom: 1rem;
+}
+
+.form-control {
+    padding: .5rem;
+    border-radius: 1rem;
+    margin: .2rem;
+    width: 100%;
+    text-align: center;
 }
 
 .box {
@@ -33,7 +41,7 @@ h1 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 600px;
+    height: 300px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)); /* Subtle white gradient */
     backdrop-filter: blur(50px);
     -webkit-backdrop-filter: blur(10px);

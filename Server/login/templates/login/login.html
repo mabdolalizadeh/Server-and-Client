@@ -13,18 +13,30 @@
 <body>
 <div class="container">
     <div class="box">
-        <h1>Login Form</h1>
-        {% csrf_token %}
-        {{ form }}
+        <div class="form">
+            <h1 id="header"></h1>
+            {% csrf_token %}
+            {{ form }}
+        </div>
     </div>
 </div>
 </body>
 
 <script>
-document.addEventListener('mousemove', (event) => {
-  const x = event.clientX / window.innerWidth * 100;
-  const y = event.clientY / window.innerHeight * 100;
-  document.body.style.backgroundImage = `radial-gradient( circle 2000px at ${x}% ${y}%, rgba(9,29,85,1) 0.2%, rgba(0,0,0,1) 100.2% )`;
-});
+    document.addEventListener('mousemove', (event) => {
+      const x = event.clientX / window.innerWidth * 100;
+      const y = event.clientY / window.innerHeight * 100;
+      document.body.style.backgroundImage = `radial-gradient( circle 2000px at ${x}% ${y}%, rgba(9,29,85,1) 0.2%, rgba(0,0,0,1) 100.2% )`;
+    });
+    const text = "l0gIn f0rM :/";
+    let index = 0;
+    function typeEffect() {
+        if (index < text.length) {
+            document.getElementById('header').innerHTML += text.charAt(index);
+            index++;
+            setTimeout(typeEffect, 100)
+        }
+    }
+    typeEffect();
 </script>
 </html>
