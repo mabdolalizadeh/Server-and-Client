@@ -20,9 +20,19 @@
     <button class="command" onclick="openModal()">Command executor</button>
     <button class="filemanager">File Manager</button>
     <button class="upload">Upload</button>
+    <button class="client-lists"  onclick="openClients()">Client lists</button>
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button class="logout">Log out</button>
+    </form>
 </div>
     <div class="overlay" id="overlay"  onclick="closeModal()"></div>
 
+    <div class="modal-clients" id="clients">
+        <ul>
+            <li>{{ user }}</li>
+        </ul>
+    </div>
     <div class="modal" id="modal">
         <input class="command-input" type="text" placeholder="Type Command...">
         <button class="submit" onclick="closeModal()">Submit</button>
@@ -54,9 +64,16 @@
         document.getElementsByClassName('overlay').classList.add('blur')
     }
 
+    function openClients() {
+        document.getElementById('clients').style.display = 'block';
+        document.getElementById("overlay").style.display = "block";
+        document.getElementsByClassName('overlay').classList.add('blur')
+    }
+
     function closeModal() {
         document.getElementById("modal").style.display = "none";
         document.getElementById("overlay").style.display = "none";
+        document.getElementById('clients').style.display = 'none';
         document.getElementsByClassName('overlay').classList.remove("blur");
     }
 </script>

@@ -1,6 +1,16 @@
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 
 
+@login_required(login_url='login')
 def index(request):
-    return render(request, 'server_side/index.html')
+    context = {
+        'user': request.user,
+    }
+    return render(request, 'server_side/index.html', context=context)
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
