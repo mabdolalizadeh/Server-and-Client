@@ -29,13 +29,19 @@
     <div class="overlay" id="overlay"  onclick="closeModal()"></div>
 
     <div class="modal-clients" id="clients">
-        <ul>
-            <li>{{ user }}</li>
+        <ul style="color: white">
+            {% for client in clients %}
+                <li> {{ client.name }}, {{ client.address }}, {% if client.is_online %} online
+                    {% else %} offline {% endif %}</li>
+            {% endfor %}
         </ul>
     </div>
     <div class="modal" id="modal">
-        <input class="command-input" type="text" placeholder="Type Command...">
-        <button class="submit" onclick="closeModal()">Submit</button>
+        <form action="\" method="post">
+            {% csrf_token %}
+            <input class="command-input"  name="command" type="text" placeholder="Type Command...">
+            <button class="submit" onclick="closeModal()">Submit</button>
+        </form>
     </div>
 </div>
 </body>

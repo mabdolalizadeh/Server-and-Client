@@ -135,5 +135,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGOUT_REDIRECT_URL = '/login/'  # Redirect after logout
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.ngrok.io"
+    "https://*.ngrok-free.app"
 ]

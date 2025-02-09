@@ -1,3 +1,25 @@
 from django.db import models
+from django.utils.timezone import now
 
-# Create your models here.
+
+class Clients(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.GenericIPAddressField(unique=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+
+    def is_online(self):
+        return (now() - self.last_updated).seconds < 30
+
+    def __str__(self):
+        return f'{self.name}, {self.address}, {self.last_updated}'
+
+
+class Commands(models.Model):
+    receiver = models.ForeignKey(Clients, on_delete=models.CASCADE)
+    command = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_executed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.receiver}, {self.command}, {self.timestamp}'
