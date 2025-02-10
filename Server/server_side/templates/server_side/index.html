@@ -40,7 +40,12 @@
         <form action="\" method="post">
             {% csrf_token %}
             <input class="command-input"  name="command" type="text" placeholder="Type Command...">
-            <button class="submit" onclick="closeModal()">Submit</button>
+            {% for client in clients %}
+                {% if client.is_online %}
+                    <button type="submit" name="">{{ client.name }},{{ client.address }}</button>
+                {% else %}
+                {% endif %}
+            {% endfor %}
         </form>
     </div>
 </div>

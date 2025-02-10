@@ -13,7 +13,7 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
-                return redirect("server")
+                return redirect("index")
 
         else:
             print(form.errors)
