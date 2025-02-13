@@ -8,7 +8,7 @@ class Clients(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
 
     def is_online(self):
-        return (now() - self.last_updated).seconds < 30
+        return (now() - self.last_updated).seconds < 300
 
     def __str__(self):
         return f'{self.name}, {self.address}, {self.last_updated}'
@@ -27,7 +27,7 @@ class Commands(models.Model):
 
 class Uploads(models.Model):
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
-    file = models.FileField(upload_to='uploads')
+    file = models.FileField(upload_to='uploads/')
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -19,7 +19,7 @@
     <h1 id="header"></h1>
     <button class="command" onclick="openModal()">Command executor</button>
     <button class="filemanager">File Manager</button>
-    <button class="upload">Upload</button>
+    <button class="upload" onclick="openUpload()">Upload</button>
     <button class="client-lists"  onclick="openClients()">Client lists</button>
     <form action="{% url 'logout' %}" method="post">
         {% csrf_token %}
@@ -42,11 +42,24 @@
             <input class="command-input"  name="command" type="text" placeholder="Type Command...">
             {% for client in clients %}
                 {% if client.is_online %}
-                    <button type="submit" name="">{{ client.name }},{{ client.address }}</button>
-                {% else %}
+                    <button type="submit" name="cmd_btn" value="{{ client.name }}">{{ client.name }},{{ client.address }}</button>
                 {% endif %}
             {% endfor %}
         </form>
+    </div>
+
+    <div class="modal-upload" id="upload">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% for client in clients %}
+            	{% if client.is_online %}
+                    <button type="submit" name="upload_btn" value="{{ client.name }}">{{ client.name }},{{ client.address }}</button>
+                {% endif %}
+            {% endfor %}
+
+        </form>
+
     </div>
 
 </div>
@@ -74,20 +87,30 @@
         document.getElementById("modal").style.alignItems = "center";
         document.getElementById("modal").style.justifyContent = "center";
         document.getElementById("overlay").style.display = "block";
-        document.getElementsByClassName('overlay').classList.add('blur')
+        document.getElementsByClassName('overlay').classList.add('blur');
     }
 
     function openClients() {
         document.getElementById('clients').style.display = 'block';
         document.getElementById("overlay").style.display = "block";
-        document.getElementsByClassName('overlay').classList.add('blur')
+        document.getElementsByClassName('overlay').classList.add('blur');
     }
 
     function closeModal() {
         document.getElementById("modal").style.display = "none";
         document.getElementById("overlay").style.display = "none";
         document.getElementById('clients').style.display = 'none';
+        document.getElementById('upload').style.display = 'none';
         document.getElementsByClassName('overlay').classList.remove("blur");
+    }
+
+    function openUpload() {
+        document.getElementById("upload").style.display = "flex";
+        document.getElementById("upload").style.flexDirection = "column";
+        document.getElementById("upload").style.alignItems = "center";
+        document.getElementById("upload").style.justifyContent = "center";
+        document.getElementById("overlay").style.display = "block";
+        document.getElementsByClassName('overlay').classList.add('blur');
     }
 </script>
 </html>

