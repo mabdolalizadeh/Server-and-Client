@@ -183,8 +183,12 @@ class FileDownloadView(View):
             hex_file.delete()
         return response
 
-
-
+@method_decorator(csrf_exempt, name='dispatch')
+class FileUploadView(View):
+    def post(self, request, *args, **kwargs):
+        clients = create_or_get_users(request)
+        ip = get_client_ip(request)
+        agent = clients.filter(address=ip).first()
 
 
 def logout_view(request):

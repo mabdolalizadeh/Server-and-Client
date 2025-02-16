@@ -6,4 +6,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('command/', views.SendCommand.as_view(), name='command'),
     path('download/', views.FileDownloadView.as_view(), name='download'),
+    path('upload/', views.FileUploadView.as_view(), name='upload'),
 ]
