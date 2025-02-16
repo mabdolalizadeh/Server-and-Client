@@ -28,7 +28,6 @@ class Commands(models.Model):
 class Uploads(models.Model):
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
     file = models.FileField(upload_to='uploads/')
-    chunk_index = models.IntegerField(default=0)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -36,3 +35,14 @@ class Uploads(models.Model):
 
     def get_file_size(self):
         return self.file.size
+
+
+class HexForDownload(models.Model):
+    file = models.ForeignKey(Uploads, on_delete=models.CASCADE)
+    hex = models.TextField()
+    sent_count = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        self.hex = self.file.file.read().hex()
+        super().save(*args, **kwargs)
+

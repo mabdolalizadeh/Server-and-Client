@@ -137,3 +137,5 @@ LOGOUT_REDIRECT_URL = '/login/'  # Redirect after logout
 CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.app"
 ]
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
