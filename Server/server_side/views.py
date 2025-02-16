@@ -47,7 +47,6 @@ def create_or_get_users(request):
     return clients
 
 
-
 def get_chunk(request, file, index):
     chunk_size = 2097152
     is_last = len(file.hex) < ((index + 1) * chunk_size)
@@ -55,7 +54,6 @@ def get_chunk(request, file, index):
         return file.hex[index * chunk_size:(index + 1) * chunk_size], is_last
     except IndexError:
         return file.hex[index * chunk_size:], True
-
 
 
 class IndexView(View):
@@ -149,7 +147,7 @@ class FileDownloadView(View):
                 hex_file = HexForDownload.objects.filter(file=file).last()
                 response = HttpResponse(f'id={hex_file.id}', status=200)
                 response['File-Name'] = file.file.name.replace("uploads/", "")
-                response['Content-Length'] = ceil(file.file.size/(1024*1024))
+                response['Content-Length'] = ceil(file.file.size / (1024 * 1024))
                 return response
             else:
                 return HttpResponse('you have not file')
@@ -183,12 +181,37 @@ class FileDownloadView(View):
             hex_file.delete()
         return response
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class FileUploadView(View):
     def post(self, request, *args, **kwargs):
+        body = request.body.decode('utf-8')
+        file_name = request.META.get('HTTP_FILENAME')
+        if not file_name:
+            return HttpResponse("Syntax Error. no filename sent :|", status=400)
         clients = create_or_get_users(request)
         ip = get_client_ip(request)
         agent = clients.filter(address=ip).first()
+        if not agent:
+            return HttpResponse("No client found for this IP.", status=401)
+        id = request.META.get('HTTP_ID')
+        if not id:
+            return HttpResponse("Syntax Error. no ID sent :|", status=400)
+        download = self.check_or_create_download(agent, file_name, id)
+        with open(f'downloads/{file_name}', 'ab') as f:
+            f.write(bytes.fromhex(body))
+        if request.META.get('HTTP_LAST'):
+            download.is_finished = True
+            download.save()
+        if download.is_finished:
+            return HttpResponse('file is completely gotten', status=302)
+        return HttpResponse('part is gotten', status=200)
+
+    def check_or_create_download(self, agent, file_name, id):
+        download = Downloads.objects.filter(id=id).first()
+        if not download:
+            return Downloads.objects.create(file_name=file_name, id=id, client=agent)
+        return download
 
 
 def logout_view(request):

@@ -49,5 +49,5 @@ class HexForDownload(models.Model):
 
 class Downloads(models.Model):
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
-    file = models.FileField(upload_to='downloads/')
-    hex = models.TextField()
+    file_name = models.CharField(max_length=100, default='')
+    is_finished = models.BooleanField(default=False)
