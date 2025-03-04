@@ -1,0 +1,12 @@
+Black
+#141414
+Rich Black (FOGRA29)
+#001414
+Black
+#000000
+Rich Black (FOGRA29)
+#000014
+Dark Green
+#002828
+Maastricht Blue
+#001428

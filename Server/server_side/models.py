@@ -4,11 +4,26 @@ from django.utils.timezone import now
 
 class Clients(models.Model):
     name = models.CharField(max_length=100)
+    id_name = models.CharField(max_length=100, default='')
     address = models.GenericIPAddressField(unique=True)
     last_updated = models.DateTimeField(auto_now=True)
+    username = models.CharField(max_length=100, default='')
+    password = models.CharField(max_length=100, default='')
+    domain = models.CharField(max_length=100, default='')
 
     def is_online(self):
         return (now() - self.last_updated).seconds < 300
+
+    def last_online_str(self):
+        time_in_minute = (now() - self.last_updated).seconds / 60
+        if time_in_minute > 60:
+            return f'{round(time_in_minute / 60)} hr'
+        else:
+            return f'{round(time_in_minute)} min'
+
+    def last_online(self):
+        time_in_minute = (now() - self.last_updated).seconds / 60
+        return time_in_minute
 
     def __str__(self):
         return f'{self.name}, {self.address}, {self.last_updated}'
@@ -27,6 +42,7 @@ class Commands(models.Model):
 
 class Uploads(models.Model):
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
+    command = models.ForeignKey(Commands, on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField(upload_to='uploads/')
     timestamp = models.DateTimeField(auto_now_add=True)
 
