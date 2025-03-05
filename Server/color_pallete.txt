@@ -1,12 +1,4 @@
-Black
-#141414
-Rich Black (FOGRA29)
-#001414
-Black
-#000000
-Rich Black (FOGRA29)
-#000014
-Dark Green
-#002828
-Maastricht Blue
-#001428
+For titles and important text: White (#FFFFFF) or Soft Cyan (#A0E0FF).
+For normal text: Light Gray (#D0D0D0) for a balanced look.
+For subtle accents: Pastel Blue (#8FC3FF).
+For emphasis or alerts: Light Gold (#FFD700).
