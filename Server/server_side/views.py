@@ -66,12 +66,14 @@ class IndexView(View):
 
         for client in clients:
             commands = Commands.objects.filter(receiver=client)
+            commands_list[client.id_name] = []
             for command in commands:
-                commands_list[client.id_name] = {
+                commands_list[client.id_name].append({
                     'command': command.command,
                     'response': command.response if command.response else '',
-                    'name': command.command.split(' ')[0]
-                }
+                    'name': command.command.split(' ')[0],
+                    'time': command.time_passed()
+                })
 
         for client in clients:
             client_list[client.id_name] = {
@@ -95,21 +97,26 @@ class IndexView(View):
         return render(request, 'server_side/index.html', context)
 
     def post(self, request):
-        clients = Clients.objects.all()
         if self.request.POST.get('command'):
             client_name = self.request.POST.get('cmd_btn')
             client_name = client_name.split(' ')[2]
-            print(client_name)
             receiver = create_or_get_users(request, client_name)
             if not receiver:
                 client_name = client_name.lower()
                 receiver = create_or_get_users(request, client_name)
             print(receiver)
             Commands.objects.create(receiver=receiver,
-                                    command=self.request.POST.get('command'))
+                                    command=self.request.POST.get('command'), timestamp=now())
         if request.FILES:
+            print(request.FILES)
             form = UploadsForm(request.POST, request.FILES)
-            agent = clients.filter(name=self.request.POST.get('upload_btn')).first()
+            client_name = self.request.POST.get('upload_btn')
+            client_name = client_name.split(' ')[2]
+            agent = create_or_get_users(request, client_name)
+            if agent:
+                print(agent)
+                Commands.objects.create(receiver=agent, command=self.request.POST.get('upload_cmd'),
+                                        timestamp=now())
             if form.is_valid():
                 upload = form.save(commit=False)
                 if agent:

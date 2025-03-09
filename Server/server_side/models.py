@@ -23,7 +23,7 @@ class Clients(models.Model):
         return time_in_minute
 
     def __str__(self):
-        return f'{self.name}, {self.ip_address}, {self.last_update}'
+        return f'{self.id_name}, {self.ip_address}, {self.last_update}'
 
 
 class Commands(models.Model):
@@ -32,6 +32,13 @@ class Commands(models.Model):
     response = models.CharField(max_length=500, default='')
     is_executed = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def time_passed(self):
+        time_in_minute = (now() - self.timestamp).seconds / 60
+        if time_in_minute > 60:
+            return f'{round(time_in_minute / 60)} hr'
+        else:
+            return f'{round(time_in_minute)} min'
 
     def __str__(self):
         return f'{self.receiver}, {self.command}, {self.timestamp}'

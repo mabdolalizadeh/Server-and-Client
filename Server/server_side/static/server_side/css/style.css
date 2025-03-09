@@ -82,12 +82,12 @@ body {
     text-align: center;
 }
 
-#overview, #file-manager {
+#cmd-exec, #file-manager {
     display: none;
 }
 
 #overview-header, #cmd-exec-header, #file-manager-header {
-    color: #D0D0D0;
+    color: var(--alert-red);
     padding: 0.8rem;
     border-bottom: 1px solid #D0D0D0;
     margin: 0 auto;
@@ -228,6 +228,84 @@ body {
     grid-column-end: 6;
     grid-row-start: 2;
     text-align: left;
+}
+
+.modal {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 20, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal h1 {
+    color: var(--headers-color);
+}
+
+.modal-content {
+    background-color: var(--secondary-color);
+    align-items: center;
+    color: var(--text-color);
+    padding: 20px;
+    border-radius: 10px;
+    width: 700px;
+    text-align: center;
+    position: relative;
+}
+
+#upload-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-cmd {
+    margin: 10px;
+    padding: 10px;
+    width: 500px;
+    font-size: 12pt;
+    border-radius: 1rem;
+    background: var(--active-color);
+    color: var(--text-color);
+    border: none;
+}
+
+.file-input {
+    padding: 10px;
+    width: 500px;
+    font-size: 12pt;
+    border-radius: .5rem;
+    color: var(--text-color);
+}
+
+.upload-submit {
+    padding: 10px;
+    width: 300px;
+    font-size: 12pt;
+    border-radius: 0.5rem;
+    color: var(--text-color);
+    background: var(--active-color);
+    cursor: pointer;
+    border: none;
+}
+
+.upload-submit:hover {
+    background: var(--hover-color);
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    cursor: pointer;
 }
 
 #functions {

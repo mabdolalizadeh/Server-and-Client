@@ -77,8 +77,17 @@
         <div id="cmd-exec-content">
         </div>
     </div>
-    <div id="upload">
-
+    <div id="upload" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUploadModal()">&times;</span>
+            <h1>Upload File</h1>
+            <form method="post" id="upload-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="text" name="upload_cmd" class="upload-cmd" placeholder="upload command here...">
+                <input type="file" name="file" id="file-input" class="file-input">
+                <input type="submit" value="Upload" id="upload-submit" class="upload-submit" name="upload_btn">
+            </form>
+        </div>
     </div>
     <div id="file-manager">
 
@@ -91,9 +100,9 @@
         </div>
         <div class="functions-btn">
         <button onclick="overviewViewer()" id="overview-btn"> <i class="fi fi-rr-ballot"></i>overview</button>
-        <button> <i class="fi fi-rr-command" id="cmd-exec-btn"></i>cmd exec</button>
-        <button><i class="fi fi-rr-cloud-upload" id="upload-btn"></i>upload</button>
-        <button><i class="fi fi-rr-folder" id="file-manager-btn"></i>file manager</button>
+        <button onclick="cmdExecViewer()"  id="cmd-exec-btn"> <i class="fi fi-rr-command"></i>cmd exec</button>
+        <button onclick="uploadModalViewer()" id="upload-btn" disabled><i class="fi fi-rr-cloud-upload"></i>upload</button>
+        <button id="file-manager-btn"><i class="fi fi-rr-folder"></i>file manager</button>
         </div>
     </div>
 </div>
@@ -102,6 +111,7 @@
 
     const jsonData = JSON.parse(document.getElementById('clients-data').textContent);
     const commandsData = JSON.parse(document.getElementById('commands-data').textContent);
+    console.log(commandsData);
     let prevClientBtnId = null;
     let prevFuncBtn = null;
 
@@ -132,15 +142,16 @@
         prevClientBtnId = newClientBtnId;
         document.querySelector("#functions-header h5").innerHTML = 'for';
         document.getElementById('func-header-client').innerHTML = client.toUpperCase();
+        console.log(document.getElementById('cmd-submit').innerText);
         let cmd_inputs = document.querySelectorAll("#cmd-form input");
         cmd_inputs.forEach(input => input.removeAttribute("disabled"));
         document.getElementById("cmd-submit").value = `Send to ${client.toUpperCase()}`;
-        overviewViewer();
+        document.getElementById('upload-btn').removeAttribute('disabled');
+        overviewViewer()
     }
 
     function overviewViewer() {
         let client = document.getElementById('func-header-client').innerHTML.toLowerCase();
-
 
         if (!jsonData[client]) {
             client = client.toUpperCase();
@@ -154,7 +165,7 @@
         console.log(Object.keys(jsonData[client]));
         console.log(jsonData[client])
 
-        let newBtnId = `btn${jsonData[client].id}`;
+        let newBtnId = `overview-btn`;
 
         if (prevFuncBtn && prevFuncBtn !== newBtnId) {
             let prevBtn = document.getElementById(prevFuncBtn);
@@ -165,7 +176,7 @@
             }
         }
 
-        let newBtn = document.getElementById('overview-btn');
+        let newBtn = document.getElementById(newBtnId);
         if (newBtn) {
             newBtn.style.transition = 'all 0.2s ease';
             newBtn.style.background = '#2461a3';
@@ -186,6 +197,8 @@
         let ip_address = document.getElementById('ip-address');
         let domain = document.getElementById('domain');
         let last_seen = document.getElementById('last-seen');
+
+        document.getElementById('overview-header').style.color = '#D0D0D0';
 
         status.style.display = 'flex';
 
@@ -243,12 +256,17 @@
 
     function cmdExecViewer() {
         let client = document.getElementById('func-header-client').innerHTML;
+
         if (!jsonData[client]) {
-            console.log(`no data for ${client}`);
+            client = client.toLowerCase();
+        }
+
+        if (!jsonData[client]) {
+            console.log(`No data for ${client}`);
             return;
         }
 
-        let newBtnId = `btn${jsonData[client].id}`;
+        let newBtnId = `cmd-exec-btn`;
 
         if (prevFuncBtn && prevFuncBtn !== newBtnId) {
             let prevBtn = document.getElementById(prevFuncBtn);
@@ -259,7 +277,7 @@
             }
         }
 
-        let newBtn = document.getElementById('cmd-exec-btn');
+        let newBtn = document.getElementById(newBtnId);
         if (newBtn) {
             newBtn.style.transition = 'all 0.2s ease';
             newBtn.style.background = '#2461a3';
@@ -276,24 +294,59 @@
         document.getElementById('cmd-exec-header-text').innerHTML = `${jsonData[client].id_name.toUpperCase()} Commands`;
 
         const cmdExecContent = document.getElementById('cmd-exec-content');
+        cmdExecContent.innerHTML = '';
 
-        Object.entries(commandsData).forEach(cli => {
-            let cmdDiv = document.createElement('div');
-            cmdDiv.classList.add('command');
+        document.getElementById('overview-header').style.color = '#D0D0D0';
 
-            cmdDiv.innerHTML = `
-                <div class="name">
-                    <h1>${cli.name}</h1>
-                </div>
-                <div class="cmd">
-                    <p>${cli.command}</p>
-                </div>
-                <div class="rsp">
-                    <pre>${cli.response}</pre>
-            `;
-        })
+        if (commandsData[client]) {
+            commandsData[client].slice().reverse().forEach(command => {
+                let cmdDiv = document.createElement('div');
+                cmdDiv.classList.add('command');
+
+                if (command.response === '') {
+                    cmdDiv.style.borderColor = '#FF4F4F';
+                    cmdDiv.style.borderStyle = 'solid';
+                    cmdDiv.style.borderWidth = '1px';
+                }
+
+                cmdDiv.innerHTML = `
+                    <div class="name">
+                        <h1>${command.name}</h1>
+                    </div>
+                    <div class="cmd">
+                        <p>${command.command}</p>
+                    </div>
+                    <div class="rsp">
+                        <pre>${command.response}</pre>
+                    </div>
+                `;
+
+                cmdExecContent.appendChild(cmdDiv);
+            });
+        } else {
+            cmdExecContent.innerHTML = '<p>No commands found for this client.</p>';
+        }
 
         prevFuncBtn = newBtnId;
+    }
+
+    function uploadModalViewer() {
+        client = document.getElementById('func-header-client').innerText;
+        let upload = document.getElementById('upload');
+        upload.style.display = 'flex';
+        upload.querySelector('h1').innerHTML = `Upload for ${client}`;
+        document.getElementById('upload-submit').value = `Upload to ${client}`;
+    }
+
+    function closeUploadModal() {
+        document.getElementById('upload').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+        let modal = document.getElementById('upload');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
     }
 </script>
 </html>
