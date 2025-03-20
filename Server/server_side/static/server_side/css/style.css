@@ -308,6 +308,38 @@ body {
     cursor: pointer;
 }
 
+#file-manager-content {
+    display: grid;
+    grid-template-columns: repeat(6, auto);
+    gap: 10px;
+}
+
+.file {
+    background: var(--hover-color);
+    padding: 1rem;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 1rem;
+    transform: scale(.8);
+}
+
+.file i {
+    color: #8FC3FF;
+    font-size: 32pt;
+}
+
+.file-name {
+    color: var(--headers-color);
+}
+
+.file-size {
+    color: var(--text-color);
+}
+
 #functions {
     background: #082747;
     border-radius: 1rem;

