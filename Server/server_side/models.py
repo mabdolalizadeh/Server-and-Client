@@ -95,6 +95,7 @@ class FileManager(models.Model):
     parent_name = models.CharField(max_length=100, null=False)
     files = models.JSONField(default=list)
     folders = models.JSONField(default=list)
+    is_drive = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name} .. {self.parent_name}'
@@ -114,3 +115,15 @@ class FileManager(models.Model):
 
         self.files = files
         self.folders = folders
+
+    def get_files(self):
+        files = ''
+
+        for file in self.files:
+            files += f'{file}, '
+
+
+    def get_folders(self):
+        folders = ''
+        for folder in self.folders:
+            folders += f'{folder}, '

