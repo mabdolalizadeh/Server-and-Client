@@ -10,13 +10,29 @@ class Clients(models.Model):
     username = models.CharField(max_length=100, default='')
     password = models.CharField(max_length=100, default='')
     domain = models.CharField(max_length=100, default='')
+    interval = models.IntegerField(default=5)
 
     def last_online_str(self):
-        time_in_minute = (now() - self.last_update).seconds / 60
-        if time_in_minute > 60:
-            return f'{round(time_in_minute / 60)} hr'
+        now_time = now()
+        delta = now_time - self.last_update
+
+        seconds = int(delta.total_seconds())
+        minutes = seconds // 60
+        hours = minutes // 60
+        days = hours // 24
+
+        if seconds < 60:
+            return f'{seconds} sec'
+        elif minutes < 60:
+            return f'{minutes} min'
+        elif hours < 24:
+            return f'{hours} hour'
+        elif days == 1 or (now_time.day - self.last_update.day == 1 and now_time.month == self.last_update.month):
+            return self.last_update.strftime("Yesterday at %H:%M")
+        elif now_time.year == self.last_update.year:
+            return self.last_update.strftime("%d %b at %H:%M")
         else:
-            return f'{round(time_in_minute)} min'
+            return self.last_update.strftime("%d.%m.%Y %H:%M")
 
     def last_online(self):
         time_in_minute = (now() - self.last_update).seconds / 60
@@ -72,3 +88,29 @@ class Downloads(models.Model):
     file_name = models.CharField(max_length=100, default='')
     is_finished = models.BooleanField(default=False)
 
+
+class FileManager(models.Model):
+    client = models.ForeignKey(Clients, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, null=False)
+    parent_name = models.CharField(max_length=100, null=False)
+    files = models.JSONField(default=list)
+    folders = models.JSONField(default=list)
+
+    def __str__(self):
+        return f'{self.name} .. {self.parent_name}'
+
+    def set_files_folders(self, answer):
+        lines = answer.strip().split('\n')
+        files = []
+        folders = []
+
+        for line in lines:
+            line = line.strip()
+            if line:
+                if '<DIR>' in line:
+                    folders.append(line[-1])
+                else:
+                    files.append(line[-1])
+
+        self.files = files
+        self.folders = folders

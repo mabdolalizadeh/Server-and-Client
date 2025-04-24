@@ -100,7 +100,7 @@ body {
     justify-content: space-around;
 }
 
-#status, #username, #ip-address, #domain, #last-seen {
+.ovw {
     background: #124171;
     backdrop-filter: blur(100px);
     padding: 1rem;
@@ -115,22 +115,22 @@ body {
     transition: all 0.3s;
 }
 
-#status:hover, #username:hover, #ip-address:hover, #domain:hover, #last-seen:hover, #last-seen:hover {
+.ovw:hover {
     transform: scale(.9);
     transition: .3s ease-in-out;
     box-shadow: 0 0 15px rgba(160, 224, 255, 0.62);
 }
 
-#status i, #username i, #ip-address i, #domain i, #last-seen i {
+.ovw i {
     color: #8FC3FF;
     font-size: 32pt;
 }
 
-#status h3, #username h3, #ip-address h3, #domain h3, #last-seen h3 {
+.ovw h3 {
     color: #8FC3FF;
 }
 
-#status p, #username p, #ip-address p, #domain p, #last-seen p {
+.ovw p {
     color: #D0D0D0;
 }
 
